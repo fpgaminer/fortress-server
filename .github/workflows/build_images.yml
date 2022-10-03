@@ -28,4 +28,3 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
           file: ./Dockerfile
-Footer
