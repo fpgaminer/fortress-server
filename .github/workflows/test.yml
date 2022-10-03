@@ -1,0 +1,33 @@
+name: Test
+on:
+  pull_request:
+  push: { branches: master }
+
+jobs:
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+    container: rust:latest
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Create test config
+      run: |
+        cp example.config.toml config.toml
+        sed -i 's/localhost/postgres/g' config.toml
+      shell: bash
+    
+    - name: Run tests
+      run: cargo test

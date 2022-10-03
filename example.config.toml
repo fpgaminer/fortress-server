@@ -1,0 +1,2 @@
+database_url = "postgresql://postgres:test@localhost/postgres"
+bind = "127.0.0.1:8080"
