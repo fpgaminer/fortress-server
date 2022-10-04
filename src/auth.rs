@@ -32,14 +32,14 @@ impl FromRequest for AuthenticatedUserId {
 				.get("Authorization")
 				.and_then(|auth| auth.to_str().ok())
 				// Skip "Bearer"
-				.and_then(|auth| auth.split(" ").nth(1))
+				.and_then(|auth| auth.split(' ').nth(1))
 				// Decode as hex
 				.and_then(|auth| {
 					let mut token = [0u8; 64];
 					hex::decode_to_slice(auth, &mut token).ok()?;
 					Some(token)
 				})
-				.ok_or(ErrorUnauthorized("Invalid Authorization Header"))?;
+				.ok_or_else(|| ErrorUnauthorized("Invalid Authorization Header"))?;
 
 			let (login_id, login_key) = token.split_at(32);
 
@@ -49,7 +49,7 @@ impl FromRequest for AuthenticatedUserId {
 				.fetch_optional(db_pool)
 				.await
 				.map_err(|_| ErrorInternalServerError("Internal Server Error"))?
-				.ok_or(ErrorUnauthorized("Invalid Authorization Header"))?;
+				.ok_or_else(|| ErrorUnauthorized("Invalid Authorization Header"))?;
 
 			// Constant time compare
 			if !bool::from(server_login_key.ct_eq(login_key)) {
