@@ -21,6 +21,6 @@ serde_json = "1"
 sqlx = { version = "0.6.2", features = ["postgres", "runtime-actix-rustls"] }
 subtle = "2.4.1"
 futures = "0.3.25"
-toml = "0.5"
+toml = "0.7"
 rand = "0.8.5"
 actix-http = "3.3.0"
