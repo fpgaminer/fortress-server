@@ -190,7 +190,11 @@ mod tests {
 		web::Data,
 		App,
 	};
-	use rand::{rngs::OsRng, seq::SliceRandom, Rng};
+	use rand::{
+		rngs::OsRng,
+		seq::{IndexedMutRandom, IndexedRandom},
+		Rng, TryRngCore,
+	};
 	use std::collections::HashSet;
 
 	struct TestObject {
@@ -221,8 +225,8 @@ mod tests {
 		.await;
 
 		// Create user
-		let login_id: [u8; 32] = OsRng.gen();
-		let login_key: [u8; 32] = OsRng.gen();
+		let login_id: [u8; 32] = OsRng.unwrap_err().random();
+		let login_key: [u8; 32] = OsRng.unwrap_err().random();
 		let auth_token = [login_id, login_key].concat();
 
 		// Insert into database
@@ -240,9 +244,9 @@ mod tests {
 		// Push some objects
 		let mut objects = (0..10)
 			.map(|_| TestObject {
-				id: OsRng.gen(),
-				data: (0..OsRng.gen_range(0..1024)).map(|_| OsRng.gen()).collect(),
-				siv: OsRng.gen(),
+				id: OsRng.unwrap_err().random(),
+				data: (0..OsRng.unwrap_err().random_range(0..1024)).map(|_| OsRng.unwrap_err().random()).collect(),
+				siv: OsRng.unwrap_err().random(),
 			})
 			.collect::<Vec<_>>();
 
@@ -266,10 +270,10 @@ mod tests {
 		}
 
 		// Update an object
-		let object = objects.choose_mut(&mut OsRng).unwrap();
+		let object = objects.choose_mut(&mut OsRng.unwrap_err()).unwrap();
 		let old_siv = object.siv;
-		object.data = (0..OsRng.gen_range(0..1024)).map(|_| OsRng.gen()).collect();
-		object.siv = OsRng.gen();
+		object.data = (0..OsRng.unwrap_err().random_range(0..1024)).map(|_| OsRng.unwrap_err().random()).collect();
+		object.siv = OsRng.unwrap_err().random();
 
 		api_update_object(&mut app, &auth_token, &object.id, &old_siv, &object.data, &object.siv)
 			.await
@@ -289,8 +293,8 @@ mod tests {
 		}
 
 		// Try to update an object using a bad siv
-		let object = objects.choose(&mut OsRng).unwrap();
-		let bad_siv: [u8; 32] = OsRng.gen();
+		let object = objects.choose(&mut OsRng.unwrap_err()).unwrap();
+		let bad_siv: [u8; 32] = OsRng.unwrap_err().random();
 
 		assert_eq!(
 			api_update_object(&mut app, &auth_token, &object.id, &bad_siv, &object.data, &object.siv)
@@ -300,7 +304,7 @@ mod tests {
 		);
 
 		// Make sure APIs fail with missing auth header
-		let object = objects.choose(&mut OsRng).unwrap();
+		let object = objects.choose(&mut OsRng.unwrap_err()).unwrap();
 
 		assert_eq!(test::TestRequest::get().uri("/objects").send_request(&mut app).await.status(), 401);
 
@@ -325,7 +329,7 @@ mod tests {
 		assert_eq!(test::TestRequest::post().uri("/user/login_key").send_request(&mut app).await.status(), 401);
 
 		// Make sure APIs fail with bad LoginKey
-		let bad_login_key: [u8; 32] = OsRng.gen();
+		let bad_login_key: [u8; 32] = OsRng.unwrap_err().random();
 		let bad_auth_token = [login_id, bad_login_key].concat();
 
 		assert_eq!(api_get_objects(&mut app, &bad_auth_token).await.unwrap_err(), 401);
@@ -339,7 +343,7 @@ mod tests {
 		assert_eq!(api_update_login_key(&mut app, &bad_auth_token, &login_key).await.unwrap_err(), 401);
 
 		// Make sure APIs fail with bad LoginID
-		let bad_login_id: [u8; 32] = OsRng.gen();
+		let bad_login_id: [u8; 32] = OsRng.unwrap_err().random();
 		let bad_auth_token = [bad_login_id, login_key].concat();
 
 		assert_eq!(api_get_objects(&mut app, &bad_auth_token).await.unwrap_err(), 401);
@@ -353,7 +357,7 @@ mod tests {
 		assert_eq!(api_update_login_key(&mut app, &bad_auth_token, &login_key).await.unwrap_err(), 401);
 
 		// Test LoginKey change
-		let login_key: [u8; 32] = OsRng.gen();
+		let login_key: [u8; 32] = OsRng.unwrap_err().random();
 		let old_auth_token = auth_token.clone();
 
 		api_update_login_key(&mut app, &auth_token, &login_key).await.unwrap();
