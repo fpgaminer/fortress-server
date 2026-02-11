@@ -5,8 +5,8 @@ use actix_web::{
 	error::{ErrorInternalServerError, ErrorUnauthorized},
 	web, Error, FromRequest, HttpRequest,
 };
-use futures::Future;
 use sqlx::PgPool;
+use std::future::Future;
 use subtle::ConstantTimeEq;
 
 
