@@ -20,4 +20,4 @@ sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "tls-rustls-r
 subtle = "2.6"
 toml = "1.0"
 rand = "0.10"
-actix-http = "3.11"
+actix-http = "3.12"
